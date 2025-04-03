@@ -61,7 +61,7 @@ def store_in_supabase(text, source_name):
     chunks = [text[i:i+500] for i in range(0, len(text), 500)]
     embeddings = embed_model.encode(chunks).tolist()
     for chunk, embedding in zip(chunks, embeddings):
-        data = {"doc_id": doc_id, "text": chunk, "embedding": json.dumps(embedding), "source": source_name}
+        data = {"doc_id": doc_id, "text": chunk, "embedding": json.dumps(embedding)}
         supabase.table("documents").insert(data).execute()
 
 # Function to handle scraping of the URL
@@ -149,11 +149,20 @@ def search_supabase(query, top_k=10):
 # Function to get a response from Gemini AI based on retrieved context
 def get_gemini_response(context, question):
     """Gets response from Gemini AI based on retrieved context."""
-    model = genai.GenerativeModel("gemini-1.5-pro")
-    prompt = f""" You are an AI assistant answering questions based on a document.
-    Context: {context}
-    Question: {question}
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    prompt = f"""
+    You are an AI assistant answering questions based on a document.
+
+    Context:
+    {context}
+
+    Question:
+    {question}
+
     Provide a detailed and relevant answer based ONLY on the context.
+    Give the exact content from the context
+    Please make sure to:
+    - Provide the source of the information if possible
     If no relevant context is found, reply: "I don't have enough information."
     """
     response = model.generate_content(prompt)
